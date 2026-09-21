@@ -552,6 +552,7 @@ class MovieRepository:
                 Seat.id.in_(seat_ids),
                 ScreenRow.screen_id == screen.id,
             )
+            .with_for_update()
         )
         seat_res = await self._session.execute(seat_stmt)
         seats_with_rows = seat_res.all()
