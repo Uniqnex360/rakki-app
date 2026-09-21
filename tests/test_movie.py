@@ -32,12 +32,12 @@ def anyio_backend():
 async def _seed_test_data(session):
     user = User(
         id=uuid.uuid4(),
-        email="testuser@pvr.local",
+        email="testuser@rakki.local",
         password_hash="hash",
     )
     cinema = Cinema(
         id=uuid.uuid4(),
-        name="PVR Lulu Mall",
+        name="RAKKI Lulu Mall",
         city="Kochi",
         timezone="Asia/Kolkata",
     )

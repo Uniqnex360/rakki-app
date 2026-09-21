@@ -1,5 +1,5 @@
 """
-Seed PVR backend with multi-city cinemas, screens, seats, movies, showtimes.
+Seed RAKKI backend with multi-city cinemas, screens, seats, movies, showtimes.
 """
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ from app.movie.models import (
 
 pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-DEMO_EMAIL = "demo@pvr.local"
+DEMO_EMAIL = "demo@rakki.local"
 DEMO_PASSWORD = "demo1234"
 
 ROW_CONFIGS: list[tuple[str, int, int]] = [
@@ -43,14 +43,11 @@ ROW_CONFIGS: list[tuple[str, int, int]] = [
     ("I", 28, 39_000),
     ("J", 28, 39_000),
 ]
-
-CITIES: dict[str, list[str]] = {
-    "Kochi":     ["PVR Lulu Mall", "AGS Cinemas", "Shenoys"],
-    "Chennai":   ["PVR Grand Mall", "AGS Cinemas", "Sathyam Cinemas"],
-    "Bangalore": ["PVR Forum Mall", "INOX Garuda Mall", "Cinepolis Nexus"],
-}
-
-SCREENS_PER_CINEMA = 3
+CINEMAS: list[dict] = [
+    {"name": "Rakki Ambattur", "screens": 2},
+    {"name": "Rakki OMR",      "screens": 2},
+]
+CHAIN_CITY = "Chennai"
 
 MOVIES: list[dict] = [
     {
@@ -134,19 +131,12 @@ MOVIES: list[dict] = [
         "times": [time(10, 0), time(14, 0), time(18, 30), time(22, 0)],
     },
 ]
-
-MOVIE_AVAILABILITY: dict[str, list[str]] = {
-    "Kochi": [
-        "I Am Game", "The Final Whistle", "Manjummel Boys", "Aavesham",
-        "Kingdom", "Bramayugam", "Vaazha", "Avengers: Endgame Encore",
-    ],
-    "Chennai": [
-        "I Am Game", "The Final Whistle", "Kingdom", "Avengers: Endgame Encore",
-    ],
-    "Bangalore": [
-        "Manjummel Boys", "Aavesham", "Vaazha", "Avengers: Endgame Encore",
-    ],
-}
+AGS_MOVIES: list[str] = [
+    "I Am Game",
+    "The Final Whistle",
+    "Kingdom",
+    "Avengers: Endgame Encore",
+]
 
 
 def _to_sync_url(async_url: str) -> str:
@@ -262,8 +252,6 @@ def _ensure_movie(s: Session, spec: dict) -> Movie:
     s.add(movie)
     s.flush()
     return movie
-
-
 def seed(db_url: str | None = None) -> None:
     url = _to_sync_url(db_url or settings.DATABASE_URL)
     engine = create_engine(url)
@@ -275,62 +263,57 @@ def seed(db_url: str | None = None) -> None:
         for spec in MOVIES:
             movies_by_title[spec["title"]] = _ensure_movie(s, spec)
 
+        available_specs = [m for m in MOVIES if m["title"] in AGS_MOVIES]
+
         total_screens = 0
         total_showtimes = 0
 
         tz = ZoneInfo("Asia/Kolkata")
         today = datetime.now(tz).date()
 
-        for city, cinema_names in CITIES.items():
-            available = MOVIE_AVAILABILITY.get(city, [])
-            available_specs = [m for m in MOVIES if m["title"] in available]
-            if not available_specs:
-                continue
+        for cinema_spec in CINEMAS:
+            cinema = _ensure_cinema(s, cinema_spec["name"], CHAIN_CITY)
 
-            for cinema_name in cinema_names:
-                cinema = _ensure_cinema(s, cinema_name, city)
+            for screen_idx in range(cinema_spec["screens"]):
+                screen_name = f"Screen {screen_idx + 1}"
+                screen = _ensure_screen(s, cinema.id, screen_name)
+                _ensure_rows_and_seats(s, screen.id)
+                total_screens += 1
 
-                for screen_idx in range(SCREENS_PER_CINEMA):
-                    screen_name = f"Screen {screen_idx + 1}"
-                    screen = _ensure_screen(s, cinema.id, screen_name)
-                    _ensure_rows_and_seats(s, screen.id)
-                    total_screens += 1
+                assigned = [
+                    available_specs[(screen_idx + i) % len(available_specs)]
+                    for i in range(min(3, len(available_specs)))
+                ]
 
-                    assigned = [
-                        available_specs[(screen_idx + i) % len(available_specs)]
-                        for i in range(min(3, len(available_specs)))
-                    ]
-
-                    for day_offset in range(8):
-                        target_date = today + timedelta(days=day_offset)
-                        for spec in assigned:
-                            movie_obj = movies_by_title[spec["title"]]
-                            for t in spec["times"][:2]:
-                                local_dt = datetime.combine(target_date, t, tzinfo=tz)
-                                utc_dt = local_dt.astimezone(ZoneInfo("UTC"))
-                                st = s.execute(
-                                    select(Showtime).where(
-                                        Showtime.screen_id == screen.id,
-                                        Showtime.starts_at == utc_dt,
-                                    )
-                                ).scalar_one_or_none()
-                                if not st:
-                                    s.add(Showtime(
-                                        id=uuid.uuid4(),
-                                        screen_id=screen.id,
-                                        movie_id=movie_obj.id,
-                                        starts_at=utc_dt,
-                                    ))
-                                    total_showtimes += 1
+                for day_offset in range(8):
+                    target_date = today + timedelta(days=day_offset)
+                    for spec in assigned:
+                        movie_obj = movies_by_title[spec["title"]]
+                        for t in spec["times"][:2]:
+                            local_dt = datetime.combine(target_date, t, tzinfo=tz)
+                            utc_dt = local_dt.astimezone(ZoneInfo("UTC"))
+                            st = s.execute(
+                                select(Showtime).where(
+                                    Showtime.screen_id == screen.id,
+                                    Showtime.starts_at == utc_dt,
+                                )
+                            ).scalar_one_or_none()
+                            if not st:
+                                s.add(Showtime(
+                                    id=uuid.uuid4(),
+                                    screen_id=screen.id,
+                                    movie_id=movie_obj.id,
+                                    starts_at=utc_dt,
+                                ))
+                                total_showtimes += 1
 
         s.commit()
 
     print(
-        f"Seeded: 1 user, {sum(len(v) for v in CITIES.values())} cinemas "
-        f"across {len(CITIES)} cities, {total_screens} screens, "
-        f"{len(MOVIES)} movies, {total_showtimes} showtimes."
+        f"RAKKI seeded: {len(CINEMAS)} cinemas in {CHAIN_CITY}, "
+        f"{total_screens} screens, {len(AGS_MOVIES)} movies, "
+        f"{total_showtimes} showtimes."
     )
-
 
 if __name__ == "__main__":
     seed(sys.argv[1] if len(sys.argv) > 1 else None)

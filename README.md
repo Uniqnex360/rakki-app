@@ -1,4 +1,4 @@
-# PVR Demo
+# RAKKI Demo
 
 Single-screen cinema booking app. One theatre, one screen, one movie,
 a real seat map, atomic booking with 409 on conflict.
@@ -15,4 +15,4 @@ pip install -r requirements.txt
 alembic upgrade head
 python scripts/seed.py
 uvicorn app.main:app --reload# PVR_Backend
-docker run --env-file .env -p 8000:8000 pvr-backend
+docker run --env-file .env -p 8000:8000 rakki-backend

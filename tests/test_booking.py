@@ -33,7 +33,7 @@ def anyio_backend():
 async def _seed_cinema_and_showtime(session):
     cinema = Cinema(
         id=uuid.uuid4(),
-        name="PVR Lulu Mall",
+        name="RAKKI Lulu Mall",
         city="Kochi",
         timezone="Asia/Kolkata",
     )
@@ -130,7 +130,7 @@ async def test_t15_happy_path_booking(session, session_factory):
 
     user = User(
         id=uuid.uuid4(),
-        email="customer1@pvr.local",
+        email="customer1@rakki.local",
         password_hash="hash",
     )
     session.add(user)
@@ -154,7 +154,7 @@ async def test_t15_happy_path_booking(session, session_factory):
         body = resp.json()
 
         assert body["status"] == "CONFIRMED"
-        assert body["ref_code"].startswith("PVR-")
+        assert body["ref_code"].startswith("RAKKI-")
         assert len(body["seats"]) == 3
         assert body["total_price_cents"] == 19_000 * 3
 
@@ -185,9 +185,9 @@ async def test_t16_concurrency_race_same_seat(session, session_factory):
     app.dependency_overrides[get_session] = _get_test_session
     data = await _seed_cinema_and_showtime(session)
 
-    user_a = User(id=uuid.uuid4(), email="userA@pvr.local", password_hash="h")
-    user_b = User(id=uuid.uuid4(), email="userB@pvr.local", password_hash="h")
-    user_c = User(id=uuid.uuid4(), email="userC@pvr.local", password_hash="h")
+    user_a = User(id=uuid.uuid4(), email="userA@rakki.local", password_hash="h")
+    user_b = User(id=uuid.uuid4(), email="userB@rakki.local", password_hash="h")
+    user_c = User(id=uuid.uuid4(), email="userC@rakki.local", password_hash="h")
     session.add_all([user_a, user_b, user_c])
     await session.commit()
 
@@ -242,7 +242,7 @@ async def test_t17_idempotency_key(session, session_factory):
     app.dependency_overrides[get_session] = _get_test_session
     data = await _seed_cinema_and_showtime(session)
 
-    user = User(id=uuid.uuid4(), email="idem@pvr.local", password_hash="h")
+    user = User(id=uuid.uuid4(), email="idem@rakki.local", password_hash="h")
     session.add(user)
     await session.commit()
 
@@ -295,8 +295,8 @@ async def test_t18_cancel_frees_seats(session, session_factory):
     app.dependency_overrides[get_session] = _get_test_session
     data = await _seed_cinema_and_showtime(session)
 
-    user1 = User(id=uuid.uuid4(), email="u1@pvr.local", password_hash="h")
-    user2 = User(id=uuid.uuid4(), email="u2@pvr.local", password_hash="h")
+    user1 = User(id=uuid.uuid4(), email="u1@rakki.local", password_hash="h")
+    user2 = User(id=uuid.uuid4(), email="u2@rakki.local", password_hash="h")
     session.add_all([user1, user2])
     await session.commit()
 

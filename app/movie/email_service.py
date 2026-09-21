@@ -53,7 +53,7 @@ class ResendEmailService(IEmailService):
 <body>
   <div class="ticket-card">
     <div class="ticket-header">
-      <h1>PVR CINEMAS</h1>
+      <h1>RAKKI CINEMAS</h1>
       <div class="ticket-ref">BOOKING CONFIRMED: {booking.ref_code}</div>
     </div>
     <div class="ticket-body">

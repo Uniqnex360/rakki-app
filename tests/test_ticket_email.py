@@ -26,7 +26,7 @@ def anyio_backend():
 
 async def _seed_data(session):
     cinema = Cinema(
-        id=uuid.uuid4(), name="PVR Lulu Mall", city="Kochi", timezone="Asia/Kolkata"
+        id=uuid.uuid4(), name="RAKKI Lulu Mall", city="Kochi", timezone="Asia/Kolkata"
     )
     screen = Screen(id=uuid.uuid4(), cinema_id=cinema.id, name="Screen 1")
     movie = Movie(
@@ -67,7 +67,7 @@ def _token_for(user_id: uuid.UUID) -> str:
 
 @pytest.mark.asyncio
 async def test_t19_email_sent_and_public_ticket_link(session, session_factory):
-    test_email_service = ConsoleEmailService(web_base_url="http://pvr.demo")
+    test_email_service = ConsoleEmailService(web_base_url="http://rakki.demo")
 
     async def _get_test_session():
         async with session_factory() as sess:
@@ -77,7 +77,7 @@ async def test_t19_email_sent_and_public_ticket_link(session, session_factory):
     app.dependency_overrides[get_email_service] = lambda: test_email_service
 
     data = await _seed_data(session)
-    user = User(id=uuid.uuid4(), email="ticket_fan@pvr.local", password_hash="h")
+    user = User(id=uuid.uuid4(), email="ticket_fan@rakki.local", password_hash="h")
     session.add(user)
     await session.commit()
 
@@ -102,7 +102,7 @@ async def test_t19_email_sent_and_public_ticket_link(session, session_factory):
         # 2. Assert email was recorded
         assert len(test_email_service.sent_emails) == 1
         sent = test_email_service.sent_emails[0]
-        assert sent["to"] == "ticket_fan@pvr.local"
+        assert sent["to"] == "ticket_fan@rakki.local"
         assert sent["ref_code"] == ref_code
         assert f"?ref={ref_code}" in sent["ticket_url"]
 

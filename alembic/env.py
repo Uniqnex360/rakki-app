@@ -61,7 +61,7 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 current_url = config.get_main_option("sqlalchemy.url")
-if current_url and current_url != "sqlite+aiosqlite:///./pvr.db":
+if current_url and current_url != "sqlite+aiosqlite:///./rakki.db":
     config.set_main_option("sqlalchemy.url", _clean_url_for_alembic(current_url))
 elif getattr(settings, "DATABASE_URL", None):
     config.set_main_option(

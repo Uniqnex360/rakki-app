@@ -1,12 +1,4 @@
-"""
-Movie, Booking & Hold Service — pure domain logic.
 
-Boundary Contract Checklist:
-- ZERO imports from fastapi or starlette
-- ZERO imports from schemas.py, exceptions.py, models.py, repository.py
-- Imports ONLY from interfaces.py and app.shared
-- Raises ONLY domain exceptions
-"""
 
 from __future__ import annotations
 
@@ -25,6 +17,11 @@ from app.movie.interfaces import (
     ShowtimeSummaryDTO,
     TicketNotFoundError,
 )
+import asyncio
+
+from collections import defaultdict
+
+_seat_hold_locks: dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
 
 class MovieService:
@@ -115,14 +112,16 @@ class MovieService:
         if len(seat_ids) != len(set(seat_ids)):
             raise InvalidSeatSelectionError("Duplicate seats requested")
 
-        return await self._repo.create_hold(
-            partner_id=partner_id,
-            showtime_id=showtime_id,
-            seat_ids=seat_ids,
-            idempotency_key=idempotency_key,
-            end_user_ref=end_user_ref,
-            ttl_seconds=ttl_seconds,
-        )
+        lock = _seat_hold_locks[str(showtime_id)]
+        async with lock:
+            return await self._repo.create_hold(
+                partner_id=partner_id,
+                showtime_id=showtime_id,
+                seat_ids=seat_ids,
+                idempotency_key=idempotency_key,
+                end_user_ref=end_user_ref,
+                ttl_seconds=ttl_seconds,
+            )
 
     async def get_hold(self, hold_id: UUID) -> HoldDTO:
         hold = await self._repo.get_hold_by_id(hold_id)

@@ -350,7 +350,7 @@ class MovieRepository:
                 "One or more selected seats do not exist on this screen"
             )
 
-        ref_code = f"PVR-{uuid.uuid4().hex[:8].upper()}"
+        ref_code = f"RAKKI-{uuid.uuid4().hex[:8].upper()}"
         booking = Booking(
             id=uuid.uuid4(),
             user_id=user_id,
@@ -690,7 +690,7 @@ class MovieRepository:
         if not held_seats:
             raise HoldExpiredError("Hold has no seats associated")
 
-        ref_code = f"PVR-{uuid.uuid4().hex[:8].upper()}"
+        ref_code = f"RAKKI-{uuid.uuid4().hex[:8].upper()}"
         booking = Booking(
             id=uuid.uuid4(),
             user_id=hold.partner_id,

@@ -38,7 +38,7 @@ def _token_for(user_id: uuid.UUID) -> str:
 
 async def _seed_test_hold_data(session):
     cinema = Cinema(
-        id=uuid.uuid4(), name="PVR Test", city="Kochi", timezone="Asia/Kolkata"
+        id=uuid.uuid4(), name="RAKKI Test", city="Kochi", timezone="Asia/Kolkata"
     )
     screen = Screen(id=uuid.uuid4(), cinema_id=cinema.id, name="Screen 1")
     movie = Movie(
@@ -70,7 +70,7 @@ async def _seed_test_hold_data(session):
     )
     user = User(
         id=uuid.uuid4(),
-        email=f"partner_{uuid.uuid4().hex[:6]}@pvr.local",
+        email=f"partner_{uuid.uuid4().hex[:6]}@rakki.local",
         password_hash="pwd",
     )
     session.add_all([cinema, screen, movie, row, *seats, st, user])
@@ -357,6 +357,7 @@ async def test_a6_commit_twice_idempotent(session, session_factory):
 # ---------------------------------------------------------------------------
 # A7: 20 concurrent holds on ONE seat from 20 distinct end_user_refs -> exactly 1 success
 # ---------------------------------------------------------------------------
+
 @pytest.mark.asyncio
 async def test_a7_concurrent_holds_one_seat(session_factory):
     async def _get_test_session():

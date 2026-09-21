@@ -1,6 +1,4 @@
-"""
-PVR Demo — single-screen cinema booking app (Backend API).
-"""
+
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.auth.routes import auth_router
 from app.movie.routes import movie_router
 
-app = FastAPI(title="PVR Demo API", version="0.1.0")
+app = FastAPI(title="RAKKI Demo API", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
