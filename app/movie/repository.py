@@ -70,12 +70,13 @@ class MovieRepository:
         result = await self._session.execute(stmt)
         rows = result.all()
 
+        now = datetime.now(timezone.utc)
         showtimes: list[ShowtimeSummaryDTO] = []
         for st, screen, cinema, movie in rows:
             cinema_tz = ZoneInfo(cinema.timezone)
             st_date_local = st.starts_at.astimezone(cinema_tz).date()
 
-            if st_date_local == target_date:
+            if st_date_local == target_date and st.starts_at > now:
                 showtimes.append(
                     ShowtimeSummaryDTO(
                         id=st.id,
@@ -350,7 +351,7 @@ class MovieRepository:
                 "One or more selected seats do not exist on this screen"
             )
 
-        ref_code = f"RAKKI-{uuid.uuid4().hex[:8].upper()}"
+        ref_code = f"AGS-{uuid.uuid4().hex[:8].upper()}"
         booking = Booking(
             id=uuid.uuid4(),
             user_id=user_id,
@@ -691,7 +692,7 @@ class MovieRepository:
         if not held_seats:
             raise HoldExpiredError("Hold has no seats associated")
 
-        ref_code = f"RAKKI-{uuid.uuid4().hex[:8].upper()}"
+        ref_code = f"AGS-{uuid.uuid4().hex[:8].upper()}"
         booking = Booking(
             id=uuid.uuid4(),
             user_id=hold.partner_id,
