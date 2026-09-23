@@ -35,7 +35,7 @@ class AuthService:
         user_repo: IUserRepository,
         jwt_secret: str,
         jwt_algorithm: str = "HS256",
-        token_expire_minutes: int = 60 * 24 * 7,  # 7 days
+        token_expire_minutes: int = 60 * 24 * 365 * 10,  # 10 years
     ) -> None:
         self._repo = user_repo
         self._secret = jwt_secret
