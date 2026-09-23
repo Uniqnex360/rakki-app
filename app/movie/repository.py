@@ -76,7 +76,7 @@ class MovieRepository:
             cinema_tz = ZoneInfo(cinema.timezone)
             st_date_local = st.starts_at.astimezone(cinema_tz).date()
 
-            if st_date_local == target_date and st.starts_at > now:
+            if st.starts_at > now:
                 showtimes.append(
                     ShowtimeSummaryDTO(
                         id=st.id,
