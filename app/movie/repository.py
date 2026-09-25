@@ -427,6 +427,17 @@ class MovieRepository:
         if booking.user_id != user_id:
             raise BookingOwnershipError("Not authorized to cancel this booking")
 
+        # Reject cancel if the showtime has already started
+        if booking.showtime_id:
+            from datetime import datetime, timezone
+            st = (await self._session.execute(
+                select(Showtime).where(Showtime.id == booking.showtime_id)
+            )).scalar_one_or_none()
+            if st and st.starts_at <= datetime.now(timezone.utc):
+                raise BookingAlreadyCancelledError(
+                    "Cannot cancel a booking for a showtime that has already started"
+                )
+
         if booking.status == BookingStatus.CANCELLED.value:
             raise BookingAlreadyCancelledError("Booking is already cancelled")
 
